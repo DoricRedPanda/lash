@@ -29,6 +29,26 @@ getWord(int *ending)
 	return word;
 }
 
+/* TODO: handle [n]redirect_op word, handle errors */
+void
+parseRedirection(char **word, int *ending, char **input, char **output)
+{
+	switch (*ending) {
+	case '<':
+		if (*input)
+			free(*input);
+		while (!(*input = getWord(ending)))
+		       ;
+		break;
+	case '>':
+		if (*output)
+			free(*output);
+		while (!(*output = getWord(ending)))
+		       ;
+		break;
+	}
+}
+
 size_t
 readToken(char ***token, char **input, char **output)
 {
@@ -37,7 +57,9 @@ readToken(char ***token, char **input, char **output)
 	size_t len = 0;
 
 	do {
-		if ((word = getWord(&ending)) != NULL) {
+		word = getWord(&ending);
+		parseRedirection(&word, &ending, input, output);
+		if (word) {
 			t = srealloc(t, ++len * sizeof(char *));
 			t[len - 1] = word;
 		}
