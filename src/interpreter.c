@@ -42,8 +42,7 @@ routine(void)
 
 	for (;;) {
 		printBar();
-		token = getToken();
-		if (!token)
+		if (!readToken(&token, NULL, NULL))
 			continue;
 		execute(token);
 		freeToken(token);

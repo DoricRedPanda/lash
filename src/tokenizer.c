@@ -14,12 +14,9 @@ getWord(int *ending)
 
 	for (;;) {
 		ch = getchar();
-		len++;
-		word = srealloc(word, len * sizeof(char));
+		word = srealloc(word, ++len * sizeof(char));
 		word[len - 1] = ch;
-		if (ch < 0)
-			exit(0);
-		if (strchr(" \n\t", ch)) {
+		if (ch <= 0 || strchr(" \n\t><", ch)) {
 			*ending = ch;
 			if (len == 1) {
 				free(word);
@@ -32,27 +29,29 @@ getWord(int *ending)
 	return word;
 }
 
-char **
-getToken()
+size_t
+readToken(char ***token, char **input, char **output)
 {
-	char **token = NULL;
-	char *word;
+	char **t = NULL, *word;
 	int ending;
 	size_t len = 0;
 
-	for (;;) {
-		word = getWord(&ending);
-		len++;
-		token = srealloc(token, len * sizeof(char *));
-		token[len - 1] = word;
-		if (strchr("\n", ending)) {
-			len++;
-			token = srealloc(token, len * sizeof(char *));
-			token[len - 1] = NULL;
-			break;
+	do {
+		if ((word = getWord(&ending)) != NULL) {
+			t = srealloc(t, ++len * sizeof(char *));
+			t[len - 1] = word;
 		}
+	} while (ending > 0 && !strchr("\n", ending));
+	if (!len) {
+		if (ending == EOF)  /* empty line ended with EOF */
+			exit(EXIT_SUCCESS);
+		*token = NULL;
+		return 0;
 	}
-	return token;
+	t = srealloc(t, (len + 1) * sizeof(char *));
+	t[len] = NULL;
+	*token = t;
+	return len;
 }
 
 void
