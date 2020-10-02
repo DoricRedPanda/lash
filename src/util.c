@@ -4,7 +4,8 @@
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/wait.h>
-#include "common.h"
+
+#include "util.h"
 
 void
 spipe(int pipefd[2])
