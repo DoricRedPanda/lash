@@ -22,7 +22,16 @@ sclose(int fd)
 }
 
 void *
-srealloc(void *ptr, int size)
+smalloc(size_t size)
+{
+	void *ptr = malloc(size);
+	if (ptr == NULL)
+		err(1, "malloc");
+	return ptr;
+}
+
+void *
+srealloc(void *ptr, size_t size)
 {
 	ptr = realloc(ptr, size);
 	if (ptr == NULL)

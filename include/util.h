@@ -2,14 +2,16 @@ void
 sclose(int fd);
 
 void *
-srealloc(void *ptr, int size);
+smalloc(size_t size);
+
+void *
+srealloc(void *ptr, size_t size);
 
 int
 sopen(char *fileName, int flag);
 
 void
 sdup2(int oldfd, int newfd);
-
 
 void
 spipe(int pipefd[2]);
