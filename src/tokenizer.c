@@ -23,7 +23,7 @@ getWord(int *ending)
 		ch = getchar();
 		word = srealloc(word, ++len * sizeof(char));
 		word[len - 1] = ch;
-		if (ch <= 0 || strchr(" \n\t><", ch)) {
+		if (ch <= 0 || strchr("\n \t><", ch)) {
 			*ending = ch;
 			if (len == 1) {
 				free(word);
@@ -55,13 +55,14 @@ parseRedirection(char **word, int *ending, char **input, char **output)
 	if (*ptr)
 		free(*ptr);
 	while (!(*ptr = getWord(ending)))
-	       ;
+		;
 }
 
 static NodeType
 checkbinop(char *word)
 {
 	NodeType type = NODE_COMMAND;
+
 	for (NodeType i = NODE_PIPE; i < NODE_COMMAND; i++)
 		if (!strcmp(word, binoper[i])) {
 			type = i;

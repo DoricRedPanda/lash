@@ -11,7 +11,6 @@
 #include "tokenizer.h"
 #include "interpreter.h"
 
-
 static int interpret(struct AST *ast);
 
 static void
@@ -99,7 +98,8 @@ interpretJunction(struct AST *ast)
 		case NODE_DISJ:
 			status = status || interpret(ast->r);
 			break;
-		default: ; /* silent warning */
+		default:
+			break;
 		}
 	}
 	return status;

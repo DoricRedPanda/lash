@@ -25,6 +25,7 @@ void *
 smalloc(size_t size)
 {
 	void *ptr = malloc(size);
+
 	if (ptr == NULL)
 		err(1, "malloc");
 	return ptr;
