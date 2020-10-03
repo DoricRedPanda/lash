@@ -11,7 +11,7 @@ sigintHandler(int sig)
 
 int main(void)
 {
-//	signal(SIGINT, sigintHandler);
+	signal(SIGINT, sigintHandler);
 	routine();
 	return 0;
 }

@@ -1,7 +1,7 @@
 #include <stdlib.h>
 
-#include "tokenizer.h"
 #include "ast.h"
+#include "tokenizer.h"
 #include "util.h"
 
 struct AST *

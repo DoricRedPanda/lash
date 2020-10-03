@@ -46,9 +46,9 @@ sopen(char *fileName, int flag)
 
 	if (fileName == NULL) {
 		return flag;
-	} else if (flag == 0) {
+	} else if (flag == STDIN) {
 		fd = open(fileName, O_RDONLY);
-	} else if (flag == 1) {
+	} else if (flag == STDOUT) {
 		fd = open(fileName,
 			O_WRONLY | O_CREAT | O_TRUNC, 0644);
 	}

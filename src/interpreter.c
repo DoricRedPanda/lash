@@ -6,9 +6,10 @@
 #include <unistd.h>
 #include <wait.h>
 
+#include "ast.h"
 #include "util.h"
 #include "tokenizer.h"
-#include "ast.h"
+
 
 static void
 printBar(void)
@@ -19,50 +20,83 @@ printBar(void)
 	putchar(' ');
 }
 
-void
-redirectFiles(char *input, char *output)
+static void
+openreplace(char *file, int oldfd)
 {
 	int fd;
 
-	if (input) {
-		fd = sopen(input, 0);
-		sdup2(fd, 0);
-		sclose(fd);
-	}
-	if (output) {
-		fd = sopen(output, 1);
-		sdup2(fd, 1);
+	if (file) {
+		fd = sopen(file, oldfd);
+		sdup2(fd, oldfd);
 		sclose(fd);
 	}
 }
 
-pid_t
+static void
+redirectFiles(char *input, char *output)
+{
+	if (input)
+		openreplace(input, STDIN);
+	if (output)
+		openreplace(output, STDOUT);
+}
+
+static int
 execute(struct AST *ast)
 {
 	pid_t pid;
+	int wstatus;
 
-	if (!ast)
-		return -1;
 	pid = fork();
 	if (pid < 0) {
 		perror("fork failed");
-		pid = -1;
 	} else if (pid == 0) {
 		redirectFiles(ast->input, ast->output);
 		execvp(ast->token[0], ast->token);
 		/*unreachable*/
 		err(1, "%s", ast->token[0]);
 	}
-	return pid;
+	wait(&wstatus);
+	return WIFEXITED(wstatus) ? WEXITSTATUS(wstatus): 1;
 }
 
-struct AST *
+int
+interpret(struct AST *ast) {
+	int ret;
+
+	if (!ast)
+		return 1;
+	switch (ast->type) {
+	case NODE_CONJ:
+		ret = interpret(ast->l) || interpret(ast->r);
+		break;
+	case NODE_DISJ:
+		ret = interpret(ast->l) && interpret(ast->r);
+		break;
+	case NODE_PIPE:
+		break;
+	case NODE_COMMAND:
+		ret = execute(ast);
+		break;
+	}
+	return ret;
+}
+
+static struct AST *
 parse()
 {
-	struct AST *ast = getASTNode();
+	struct AST *ast = getASTNode(), *opNode;
+	NodeType type;
 
-	readToken(&(ast->token), &(ast->input), &(ast->output));
+	type = readToken(&(ast->token), &(ast->input), &(ast->output));
 	ast->type = NODE_COMMAND;
+	if (type != NODE_COMMAND) {
+		opNode = getASTNode();
+		opNode->type = type;
+		opNode->l = ast;
+		opNode->r = parse();
+		ast = opNode;
+	}
 	return ast;
 }
 
@@ -74,9 +108,8 @@ routine(void)
 	for (;;) {
 		printBar();
 		ast = parse();
-		execute(ast);
+		interpret(ast);
 		freeAST(ast);
-		wait(NULL);
 	}
 }
 

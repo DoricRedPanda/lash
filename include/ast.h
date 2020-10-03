@@ -1,8 +1,8 @@
 typedef enum {
-	NODE_COMMAND,
 	NODE_PIPE,
 	NODE_CONJ,
 	NODE_DISJ,
+	NODE_COMMAND, /* always last */
 } NodeType;
 
 struct AST {

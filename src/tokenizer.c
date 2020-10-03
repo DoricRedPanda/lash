@@ -2,10 +2,17 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "ast.h"
 #include "util.h"
 #include "tokenizer.h"
 
-char *
+static char *binoper[] = {
+	[NODE_PIPE] = "|",
+	[NODE_CONJ] = "&&",
+	[NODE_DISJ] = "||",
+};
+
+static char *
 getWord(int *ending)
 {
 	char *word = NULL;
@@ -30,50 +37,68 @@ getWord(int *ending)
 }
 
 /* TODO: handle [n]redirect_op word, handle errors */
-void
+static void
 parseRedirection(char **word, int *ending, char **input, char **output)
 {
+	char **ptr;
+
 	switch (*ending) {
 	case '<':
-		if (*input)
-			free(*input);
-		while (!(*input = getWord(ending)))
-		       ;
+		ptr = input;
 		break;
 	case '>':
-		if (*output)
-			free(*output);
-		while (!(*output = getWord(ending)))
-		       ;
+		ptr = output;
 		break;
+	default:
+		return;
 	}
+	if (*ptr)
+		free(*ptr);
+	while (!(*ptr = getWord(ending)))
+	       ;
 }
 
-size_t
+static NodeType
+checkbinop(char *word)
+{
+	NodeType type = NODE_COMMAND;
+	for (NodeType i = NODE_PIPE; i < NODE_COMMAND; i++)
+		if (!strcmp(word, binoper[i])) {
+			type = i;
+			break;
+		}
+	return type;
+}
+
+NodeType
 readToken(char ***token, char **input, char **output)
 {
 	char **t = NULL, *word;
-	int ending;
-	size_t len = 0;
+	int ending, len = 0;
+	NodeType type = NODE_COMMAND;
 
 	do {
 		word = getWord(&ending);
 		parseRedirection(&word, &ending, input, output);
 		if (word) {
+			type = checkbinop(word);
+			if (type != NODE_COMMAND) {
+				free(word);
+				break;
+			}
 			t = srealloc(t, ++len * sizeof(char *));
 			t[len - 1] = word;
 		}
-	} while (ending > 0 && !strchr("\n", ending));
+	} while (ending > 0 && ending != '\n');
 	if (!len) {
 		if (ending == EOF)  /* empty line ended with EOF */
 			exit(EXIT_SUCCESS);
-		*token = NULL;
-		return 0;
+	} else {
+		t = srealloc(t, (len + 1) * sizeof(char *));
+		t[len] = NULL;
 	}
-	t = srealloc(t, (len + 1) * sizeof(char *));
-	t[len] = NULL;
 	*token = t;
-	return len;
+	return type;
 }
 
 void
