@@ -11,6 +11,9 @@
 #include "tokenizer.h"
 #include "interpreter.h"
 
+#define REDIRECT(UNUSED, TOREPLACE, FD) \
+		(sclose(UNUSED), sdup2(FD, TOREPLACE), close(FD))
+
 static int interpret(struct AST *ast);
 
 static void
@@ -63,14 +66,10 @@ interpretPipe(struct AST *ast)
 	if (pid < 0) {
 		err(1, "fork");
 	} else if (!pid) { /* child */
-		sclose(fd[0]);
-		sdup2(fd[1], STDOUT);
-		sclose(fd[1]);
+		REDIRECT(fd[0], STDOUT, fd[1]);
 		interpret(ast->l);
 	} else { /* parent */
-		sclose(fd[1]);
-		sdup2(fd[0], STDIN);
-		sclose(fd[0]);
+		REDIRECT(fd[1], STDIN, fd[0]);
 		interpret(ast->r);
 		waitpid(pid, &status, 0);
 		status = WEXITSTATUS(status);
