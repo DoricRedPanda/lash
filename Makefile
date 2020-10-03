@@ -18,9 +18,9 @@ VPATH := $(source_dir) $(include_dir) $(bin_dir)
 all: $(program_name)
 
 $(program_name): $(object_files)
-	$(CC) $^ ${linkerflahs} -o $@
+	$(CC) $^ ${linkerflags} -o $@
 
-$(bin_dir)/%.o: $(source_dir)/%.c
+$(bin_dir)/%.o: %.c
 	$(CC) -c $< $(CFLAGS) -I$(include_dir) -I$(source_dir) -o $@
 
 clean:
