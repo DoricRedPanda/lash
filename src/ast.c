@@ -5,13 +5,14 @@
 #include "util.h"
 
 struct AST *
-getASTNode()
+getASTNode(char **token, char *input, char *output, NodeType type)
 {
 	struct AST *ast = smalloc(sizeof(struct AST));
 
-	ast->token = NULL;
-	ast->input = NULL;
-	ast->output = NULL;
+	ast->token = token;
+	ast->input = input;
+	ast->output = output;
+	ast->type = type;
 	ast->l = NULL;
 	ast->r = NULL;
 	return ast;

@@ -74,7 +74,7 @@ NodeType
 readToken(char ***token, char **input, char **output)
 {
 	char **t = NULL, *word;
-	int ending, len = 0;
+	int ending = 0, len = 0;
 	NodeType type = NODE_COMMAND;
 
 	do {

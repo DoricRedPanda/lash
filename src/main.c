@@ -3,15 +3,9 @@
 #include "interpreter.h"
 
 
-static void
-sigintHandler(int sig)
-{
-	return;
-}
-
 int main(void)
 {
-	signal(SIGINT, sigintHandler);
+	signal(SIGINT, SIG_IGN);
 	routine();
 	return 0;
 }
