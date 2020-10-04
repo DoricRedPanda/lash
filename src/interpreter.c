@@ -10,6 +10,7 @@
 #include "util.h"
 #include "tokenizer.h"
 #include "interpreter.h"
+#include "builtin.h"
 
 #define REDIRECT(UNUSED, TOREPLACE, FD) \
 		(sclose(UNUSED), sdup2(FD, TOREPLACE), close(FD))
@@ -50,9 +51,10 @@ static void
 execute(struct AST *ast)
 {
 	redirectFiles(ast->input, ast->output);
-	execvp(ast->token[0], ast->token);
-	/*should be unreachable*/
-	err(1, "%s", ast->token[0]);
+	if (!builtin(ast)) {
+		execvp(ast->token[0], ast->token);
+		err(1, "%s", ast->token[0]);
+	}
 }
 
 static int
@@ -87,6 +89,7 @@ interpretJunction(struct AST *ast)
 		err(1, "fork");
 	} else if (!pid) {
 		interpret(ast->l);
+		exit(EXIT_SUCCESS); /* performed builtin */
 	} else {
 		waitpid(pid, &status, 0);
 		status = !WEXITSTATUS(status);
@@ -119,6 +122,7 @@ interpret(struct AST *ast)
 	case NODE_PIPE:
 		ret = interpretPipe(ast);
 		break;
+	case NODE_AMPR: /* FALLTHROUGH */
 	case NODE_COMMAND:
 		execute(ast); /* should not return */
 	}
@@ -126,23 +130,24 @@ interpret(struct AST *ast)
 }
 
 static struct AST *
-parse()
+parse(int *bg)
 {
 	struct AST *ast;
 	char **token = NULL, *input = NULL, *output = NULL;
 	NodeType type;
 
 	type = readToken(&token, &input, &output);
+	*bg = *bg || type == NODE_AMPR;
 	if (type == NODE_COMMAND && token == NULL) {
 		free(input);
 		free(output);
 		return NULL;
-	} else if (type != NODE_COMMAND) {
+	} else if (type != NODE_COMMAND && type != NODE_AMPR) {
 		ast = getASTNode(NULL, NULL, NULL, type);
 		ast->l = getASTNode(token, input, output, NODE_COMMAND);
-		ast->r = parse();
+		ast->r = parse(bg);
 	} else {
-		ast = getASTNode(token, input, output, NODE_COMMAND);
+		ast = getASTNode(token, input, output, type);
 	}
 	return ast;
 }
@@ -151,17 +156,25 @@ void
 routine(void)
 {
 	struct AST *ast = NULL;
+	int bg;
 	pid_t pid;
 
 	for (;;) {
 		printBar();
-		ast = parse();
+		bg = 0;
+		ast = parse(&bg);
 		if (ast) {
-			pid = fork();
-			if (!pid)
+			pid = builtin(ast) ? 1 : fork();
+			if (!pid) {
+				if (bg && !ast->l->input)
+					ast->l->input = "/dev/null";
 				interpret(ast);
+			}
 			freeAST(ast);
-			waitpid(pid, NULL, 0);
+			if (!bg)
+				waitpid(pid, NULL, 0);
+			while (waitpid(-1, NULL, WNOHANG) > 0)
+				; /* catch zombies */
 		}
 	}
 }

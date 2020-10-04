@@ -6,10 +6,11 @@
 #include "util.h"
 #include "tokenizer.h"
 
-static char *binoper[] = {
+static char *oper[] = {
 	[NODE_PIPE] = "|",
 	[NODE_CONJ] = "&&",
 	[NODE_DISJ] = "||",
+	[NODE_AMPR] = "&",
 };
 
 static char *
@@ -59,12 +60,12 @@ parseRedirection(char **word, int *ending, char **input, char **output)
 }
 
 static NodeType
-checkbinop(char *word)
+checkoper(char *word)
 {
 	NodeType type = NODE_COMMAND;
 
 	for (NodeType i = NODE_PIPE; i < NODE_COMMAND; i++)
-		if (!strcmp(word, binoper[i])) {
+		if (!strcmp(word, oper[i])) {
 			type = i;
 			break;
 		}
@@ -82,7 +83,7 @@ readToken(char ***token, char **input, char **output)
 		word = getWord(&ending);
 		parseRedirection(&word, &ending, input, output);
 		if (word) {
-			type = checkbinop(word);
+			type = checkoper(word);
 			if (type != NODE_COMMAND) {
 				free(word);
 				break;

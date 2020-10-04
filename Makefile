@@ -1,7 +1,7 @@
 program_name := lash
 
 CC = gcc
-CFLAGS = -Wall -pedantic -std=c99
+CFLAGS = -Wall -pedantic -std=gnu99
 linkerflags =
 
 source_dir := src

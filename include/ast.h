@@ -2,6 +2,7 @@ typedef enum {
 	NODE_PIPE,
 	NODE_CONJ,
 	NODE_DISJ,
+	NODE_AMPR,
 	NODE_COMMAND, /* always last */
 } NodeType;
 

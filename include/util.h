@@ -1,6 +1,7 @@
 #define STDIN 0
 #define STDOUT 1
 #define STDERR 2
+#define LEN(X) (sizeof(X) / sizeof((X)[0]))
 
 void
 sclose(int fd);
