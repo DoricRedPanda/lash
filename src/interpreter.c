@@ -13,7 +13,7 @@
 #include "builtin.h"
 
 #define REDIRECT(UNUSED, TOREPLACE, FD) \
-		(sclose(UNUSED), sdup2(FD, TOREPLACE), close(FD))
+		(sclose(UNUSED), sdup2(FD, TOREPLACE), sclose(FD))
 
 static int interpret(struct AST *ast);
 
