@@ -27,7 +27,7 @@ printBar(void)
 }
 
 static void
-openreplace(char *file, int oldfd)
+openReplace(char *file, int oldfd)
 {
 	int fd;
 
@@ -42,9 +42,9 @@ static void
 redirectFiles(char *input, char *output)
 {
 	if (input)
-		openreplace(input, STDIN);
+		openReplace(input, STDIN);
 	if (output)
-		openreplace(output, STDOUT);
+		openReplace(output, STDOUT);
 }
 
 static void

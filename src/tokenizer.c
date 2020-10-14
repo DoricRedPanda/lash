@@ -41,7 +41,7 @@ getWord(int *ending)
 static void
 parseRedirection(char **word, int *ending, char **input, char **output)
 {
-	char **ptr;
+	char **ptr = NULL;
 
 	switch (*ending) {
 	case '<':
@@ -60,7 +60,7 @@ parseRedirection(char **word, int *ending, char **input, char **output)
 }
 
 static NodeType
-checkoper(char *word)
+checkOper(char *word)
 {
 	NodeType type = NODE_COMMAND;
 
@@ -83,7 +83,7 @@ readToken(char ***token, char **input, char **output)
 		word = getWord(&ending);
 		parseRedirection(&word, &ending, input, output);
 		if (word) {
-			type = checkoper(word);
+			type = checkOper(word);
 			if (type != NODE_COMMAND) {
 				free(word);
 				break;
