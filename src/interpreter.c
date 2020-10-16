@@ -12,8 +12,8 @@
 #include "interpreter.h"
 #include "builtin.h"
 
-#define REDIRECT(UNUSED, TOREPLACE, FD) \
-		(sclose(UNUSED), sdup2(FD, TOREPLACE), sclose(FD))
+#define REDIRECT(UNUSED, DST, SRC) \
+		(sclose(UNUSED), sdup2(SRC, DST), sclose(SRC))
 
 static int interpret(struct AST *ast);
 
@@ -53,7 +53,7 @@ execute(struct AST *ast)
 	redirectFiles(ast->input, ast->output);
 	if (!builtin(ast)) {
 		execvp(ast->token[0], ast->token);
-		err(1, "%s", ast->token[0]);
+		err(EXIT_FAILURE, "%s", ast->token[0]);
 	}
 }
 
@@ -66,12 +66,12 @@ interpretPipe(struct AST *ast)
 	spipe(fd);
 	pid = fork();
 	if (pid < 0) {
-		err(1, "fork");
+		err(EXIT_FAILURE, "fork");
 	} else if (!pid) { /* child */
-		REDIRECT(fd[0], STDOUT, fd[1]);
+		REDIRECT(fd[STDIN], STDOUT, fd[STDOUT]);
 		interpret(ast->l);
 	} else { /* parent */
-		REDIRECT(fd[1], STDIN, fd[0]);
+		REDIRECT(fd[STDOUT], STDIN, fd[STDIN]);
 		interpret(ast->r);
 		waitpid(pid, &status, 0);
 		status = WEXITSTATUS(status);
@@ -86,7 +86,7 @@ interpretJunction(struct AST *ast)
 
 	pid = fork();
 	if (pid < 0) {
-		err(1, "fork");
+		err(EXIT_FAILURE, "fork");
 	} else if (!pid) {
 		interpret(ast->l);
 		exit(EXIT_SUCCESS); /* performed builtin */
@@ -164,12 +164,9 @@ routine(void)
 		bg = 0;
 		ast = parse(&bg);
 		if (ast) {
-			pid = builtin(ast) ? 1 : fork();
-			if (!pid) {
-				if (bg && !ast->l->input)
-					ast->l->input = "/dev/null";
+			pid = builtin(ast) ? -1 : fork();
+			if (!pid)
 				interpret(ast);
-			}
 			freeAST(ast);
 			if (!bg)
 				waitpid(pid, NULL, 0);

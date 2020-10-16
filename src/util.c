@@ -11,14 +11,14 @@ void
 spipe(int pipefd[2])
 {
 	if (pipe(pipefd))
-		err(1, "pipe");
+		err(EXIT_FAILURE, "pipe");
 }
 
 void
 sclose(int fd)
 {
 	if (close(fd))
-		err(1, "close");
+		err(EXIT_FAILURE, "close");
 }
 
 void *
@@ -27,7 +27,7 @@ smalloc(size_t size)
 	void *ptr = malloc(size);
 
 	if (ptr == NULL)
-		err(1, "malloc");
+		err(EXIT_FAILURE, "malloc");
 	return ptr;
 }
 
@@ -36,7 +36,7 @@ srealloc(void *ptr, size_t size)
 {
 	ptr = realloc(ptr, size);
 	if (ptr == NULL)
-		err(1, "realloc");
+		err(EXIT_FAILURE, "realloc");
 	return ptr;
 }
 
@@ -54,7 +54,7 @@ sopen(char *fileName, int flag)
 			O_WRONLY | O_CREAT | O_TRUNC, 0644);
 	}
 	if (fd < 0)
-		err(1, "open");
+		err(EXIT_FAILURE, "open");
 	return fd;
 }
 
@@ -62,5 +62,5 @@ void
 sdup2(int oldfd, int newfd)
 {
 	if (dup2(oldfd, newfd) < 0)
-		err(1, "dup2");
+		err(EXIT_FAILURE, "dup2");
 }
