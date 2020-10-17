@@ -13,6 +13,15 @@ static char *oper[] = {
 	[NODE_AMPR] = "&",
 };
 
+static int
+skipComment(int ch)
+{
+	if (ch == '#')
+		while (ch != '\n' && ch != EOF)
+			ch = fgetc(stdin);
+	return ch;
+}
+
 static char *
 getWord(int *ending)
 {
@@ -22,6 +31,7 @@ getWord(int *ending)
 
 	for (;;) {
 		ch = fgetc(stdin);
+		ch = skipComment(ch);
 		word = srealloc(word, ++len * sizeof(char));
 		word[len - 1] = ch;
 		if (ch <= 0 || strchr("\n \t><", ch)) {
