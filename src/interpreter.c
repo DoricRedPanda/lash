@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <wait.h>
 
+#include "flags.h"
 #include "ast.h"
 #include "util.h"
 #include "tokenizer.h"
@@ -27,14 +28,14 @@ printBar(void)
 }
 
 static void
-openReplace(char *file, int oldfd)
+openReplace(char *file, int dstfd)
 {
-	int fd;
+	int srcfd;
 
 	if (file) {
-		fd = sopen(file, oldfd);
-		sdup2(fd, oldfd);
-		sclose(fd);
+		srcfd = sopen(file, dstfd);
+		sdup2(srcfd, dstfd);
+		sclose(srcfd);
 	}
 }
 
@@ -42,9 +43,9 @@ static void
 redirectFiles(char *input, char *output)
 {
 	if (input)
-		openReplace(input, STDIN);
+		openReplace(input, STDIN_FILENO);
 	if (output)
-		openReplace(output, STDOUT);
+		openReplace(output, STDOUT_FILENO);
 }
 
 static void
@@ -68,10 +69,10 @@ interpretPipe(struct AST *ast)
 	if (pid < 0) {
 		err(EXIT_FAILURE, "fork");
 	} else if (!pid) { /* child */
-		REDIRECT(fd[STDIN], STDOUT, fd[STDOUT]);
+		REDIRECT(fd[STDIN_FILENO], STDOUT_FILENO, fd[STDOUT_FILENO]);
 		interpret(ast->l);
 	} else { /* parent */
-		REDIRECT(fd[STDOUT], STDIN, fd[STDIN]);
+		REDIRECT(fd[STDOUT_FILENO], STDIN_FILENO, fd[STDIN_FILENO]);
 		interpret(ast->r);
 		waitpid(pid, &status, 0);
 		status = WEXITSTATUS(status);
@@ -160,7 +161,8 @@ routine(void)
 	pid_t pid;
 
 	for (;;) {
-		printBar();
+		if (p_interactive)
+			printBar();
 		bg = 0;
 		ast = parse(&bg);
 		if (ast) {

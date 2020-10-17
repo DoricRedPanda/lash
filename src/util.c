@@ -47,9 +47,9 @@ sopen(char *fileName, int flag)
 
 	if (fileName == NULL) {
 		return flag;
-	} else if (flag == STDIN) {
+	} else if (flag == STDIN_FILENO) {
 		fd = open(fileName, O_RDONLY);
-	} else if (flag == STDOUT) {
+	} else if (flag == STDOUT_FILENO) {
 		fd = open(fileName,
 			O_WRONLY | O_CREAT | O_TRUNC, 0644);
 	}
@@ -59,8 +59,8 @@ sopen(char *fileName, int flag)
 }
 
 void
-sdup2(int oldfd, int newfd)
+sdup2(int srcfd, int dstfd)
 {
-	if (dup2(oldfd, newfd) < 0)
+	if (dup2(srcfd, dstfd) < 0)
 		err(EXIT_FAILURE, "dup2");
 }

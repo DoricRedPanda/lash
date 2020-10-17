@@ -21,7 +21,7 @@ getWord(int *ending)
 	size_t len = 0;
 
 	for (;;) {
-		ch = getchar();
+		ch = fgetc(stdin);
 		word = srealloc(word, ++len * sizeof(char));
 		word[len - 1] = ch;
 		if (ch <= 0 || strchr("\n \t><", ch)) {

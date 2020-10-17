@@ -1,6 +1,3 @@
-#define STDIN 0
-#define STDOUT 1
-#define STDERR 2
 #define LEN(X) (sizeof(X) / sizeof((X)[0]))
 
 void
@@ -16,7 +13,7 @@ int
 sopen(char *fileName, int flag);
 
 void
-sdup2(int oldfd, int newfd);
+sdup2(int srcfd, int dstfd);
 
 void
 spipe(int pipefd[2]);
