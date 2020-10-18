@@ -180,6 +180,8 @@ routine(FILE *file)
 			if (!pid) {
 				if (!p_interactive)
 					fclose(file);
+				if (bg)
+					setpgid(getpid(), getpid());
 				interpret(ast);
 			}
 			freeAST(ast);
