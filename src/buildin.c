@@ -23,8 +23,7 @@ builtin(struct AST *ast)
 	};
 
 
-	if ((ast->type != NODE_COMMAND && ast->type != NODE_AMPR) ||
-			!ast->token)
+	if (!ast->token)
 		return 0;
 	for (unsigned long int i = 0; i < LEN(builtins); i++) {
 		if (!strcmp(builtins[i].name, ast->token[0])) {
