@@ -1,4 +1,56 @@
-lash - Lacking Ambition shell
+lash - lacking ambition shell
+-----------------------------
 
-Simple not-POSIX shell written for fun and educational purposes.
+ _           _
+| | __ _ ___| |__
+| |/ _` / __| '_ \
+| | (_| \__ \ | | |
+|_|\__,_|___/_| |_|
+
+
+Simple featureless shell (without POSIX compatibility) written for fun and
+eductational purposes.
+
+Goals
+-----
+1) simplicity and understandability.
+2) extensibility.
+
+Not goals
+---------
+1) POSIX compatibility is encouraged, but if the feature adds unnecessary
+complexity it should be redesigned.
+2) Features for interactive usage are not in priority.
+
+Installation
+------------
+Enter the following command to build and install lash (if necessary as root):
+	make install
+
+Usage
+-----
+To run lash in interactive mode enter the following:
+	lash
+
+To execute your script enter:
+	lash yourscript.sh
+
+You can check example scripts from "examples" directory.
+
+Implemented POSIX shell operations
+----------------------
+1) Token recognition.
+2) Simple command execution.
+3) (&&, ||, |, &) Lists execution.
+4) stdin and stdout redirection.
+5) Builtins execution.
+6) Foreground and background (partially. See
+  https://www.gnu.org/software/libc/manual/html_node/Implementing-a-Shell.html
+  for more info).
+7) Comments
+8) Scripts execution.
+
+List of builtin commands
+-------------------------
+exit, cd.
 
