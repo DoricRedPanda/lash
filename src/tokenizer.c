@@ -14,27 +14,27 @@ static char *oper[] = {
 };
 
 static int
-skipComment(int ch)
+skipComment(FILE *file, int ch)
 {
 	if (ch == '#')
 		while (ch != '\n' && ch != EOF)
-			ch = fgetc(stdin);
+			ch = fgetc(file);
 	return ch;
 }
 
 static char *
-getWord(int *ending)
+getWord(FILE *file, int *ending)
 {
 	char *word = NULL;
-	int ch;
+	int ch = 0;
 	size_t len = 0;
 
 	for (;;) {
-		ch = fgetc(stdin);
-		ch = skipComment(ch);
+		ch = fgetc(file);
+		ch = skipComment(file, ch);
 		word = srealloc(word, ++len * sizeof(char));
 		word[len - 1] = ch;
-		if (ch <= 0 || strchr("\n \t><", ch)) {
+		if (ch == EOF || strchr("\n \t><", ch)) {
 			*ending = ch;
 			if (len == 1) {
 				free(word);
@@ -49,7 +49,7 @@ getWord(int *ending)
 
 /* TODO: handle [n]redirect_op word, handle errors */
 static void
-parseRedirection(char **word, int *ending, char **input, char **output)
+parseRedirection(FILE *file, char **word, int *ending, char **input, char **output)
 {
 	char **ptr = NULL;
 
@@ -65,7 +65,7 @@ parseRedirection(char **word, int *ending, char **input, char **output)
 	}
 	if (*ptr)
 		free(*ptr);
-	while (!(*ptr = getWord(ending)))
+	while (!(*ptr = getWord(file, ending)))
 		;
 }
 
@@ -83,15 +83,15 @@ checkOper(char *word)
 }
 
 NodeType
-readToken(char ***token, char **input, char **output)
+readToken(FILE *file, char ***token, char **input, char **output)
 {
 	char **t = NULL, *word;
 	int ending = 0, len = 0;
 	NodeType type = NODE_COMMAND;
 
 	do {
-		word = getWord(&ending);
-		parseRedirection(&word, &ending, input, output);
+		word = getWord(file, &ending);
+		parseRedirection(file, &word, &ending, input, output);
 		if (word) {
 			type = checkOper(word);
 			if (type != NODE_COMMAND) {
@@ -101,7 +101,7 @@ readToken(char ***token, char **input, char **output)
 			t = srealloc(t, ++len * sizeof(char *));
 			t[len - 1] = word;
 		}
-	} while (ending > 0 && ending != '\n');
+	} while (ending != EOF && ending != '\n');
 	if (!len) {
 		if (ending == EOF)  /* empty line ended with EOF */
 			exit(EXIT_SUCCESS);

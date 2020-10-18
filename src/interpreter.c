@@ -109,13 +109,14 @@ interpretJunction(struct AST *ast)
 			errx(EXIT_FAILURE, "unreachable");
 		}
 	}
+	err(EXIT_FAILURE, "WRONG");
 }
 
 static void
 interpret(struct AST *ast)
 {
 	if (!ast)
-		return;
+		errx(EXIT_FAILURE, "Syntax error");
 	switch (ast->type) {
 	case NODE_CONJ: /* FALLTHROUGH */
 	case NODE_DISJ:
@@ -124,37 +125,46 @@ interpret(struct AST *ast)
 	case NODE_PIPE:
 		interpretPipe(ast);
 		break;
-	case NODE_AMPR: /* FALLTHROUGH */
-	case NODE_COMMAND:
+	default:
 		execute(ast);
 	}
+	err(EXIT_FAILURE, "WRONG");
 }
 
 static struct AST *
-parse(int *bg)
+parse(FILE *file, int *bg)
 {
-	struct AST *ast;
+	struct AST *ast = NULL, *old = NULL;
 	char **token = NULL, *input = NULL, *output = NULL;
 	NodeType type;
 
-	type = readToken(&token, &input, &output);
-	*bg = *bg || type == NODE_AMPR;
-	if (type == NODE_COMMAND && token == NULL) {
-		free(input);
-		free(output);
-		return NULL;
-	} else if (type != NODE_COMMAND && type != NODE_AMPR) {
-		ast = getASTNode(NULL, NULL, NULL, type);
-		ast->l = getASTNode(token, input, output, NODE_COMMAND);
-		ast->r = parse(bg);
-	} else {
-		ast = getASTNode(token, input, output, type);
-	}
+	do {
+		type = readToken(file, &token, &input, &output);
+		if (type == NODE_AMPR) {
+			*bg = 1;
+			type = NODE_COMMAND;
+		}
+		if (!token) {
+			free(input);
+			free(output);
+			if (ast)
+				warnx("Syntax error");
+			freeAST(ast);
+			return NULL;
+		}
+		*(ast ? &(ast->r) : &ast) = getASTNode(
+			token, input, output, NODE_COMMAND);
+		if (type != NODE_COMMAND) {
+			old = ast;
+			ast = getASTNode(NULL, NULL, NULL, type);
+			ast->l = old;
+		}
+	} while (type != NODE_COMMAND);
 	return ast;
 }
 
 void
-routine(void)
+routine(FILE *file)
 {
 	struct AST *ast = NULL;
 	int bg;
@@ -164,11 +174,14 @@ routine(void)
 		if (p_interactive)
 			printBar();
 		bg = 0;
-		ast = parse(&bg);
+		ast = parse(file, &bg);
 		if (ast) {
 			pid = (!bg && builtin(ast)) ? -1 : fork();
-			if (!pid)
+			if (!pid) {
+				if (!p_interactive)
+					fclose(file);
 				interpret(ast);
+			}
 			freeAST(ast);
 			if (!bg)
 				waitpid(pid, NULL, 0);
@@ -176,5 +189,6 @@ routine(void)
 				; /* catch zombies */
 		}
 	}
+	fclose(file);
 }
 

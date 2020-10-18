@@ -1,1 +1,1 @@
-void routine(void);
+void routine(FILE *);

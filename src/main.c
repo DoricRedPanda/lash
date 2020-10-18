@@ -14,22 +14,34 @@ sigint_handler(int signum)
 	return;
 }
 
-void init(int argc, char *argv[])
+FILE *
+init(int argc, char *argv[])
 {
+	FILE *file;
+
 	if (argc > 2)
 		errx(EXIT_FAILURE, "too many arguments");
-	else if (argc == 2)
-		if (freopen(argv[1], "r", stdin) == NULL)
-			err(EXIT_FAILURE, "freopen");
-	p_interactive = isatty(fileno(stdin));
+	else if (argc == 2) {
+		if ((file = fopen(argv[1], "r")) == NULL)
+			err(EXIT_FAILURE, "fopen");
+		p_interactive = 0;
+	} else if (argc == 1) {
+		file = stdin;
+		p_interactive = isatty(fileno(file));
+		if (!p_interactive)
+			err(1, "wrong usage");
+	}
 	if (p_interactive)
 		signal(SIGINT, sigint_handler);
+	return file;
 }
 
 int
 main(int argc, char *argv[])
 {
-	init(argc, argv);
-	routine();
+	FILE *file;
+
+	file = init(argc, argv);
+	routine(file);
 	return 0;
 }

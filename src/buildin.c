@@ -22,7 +22,6 @@ builtin(struct AST *ast)
 		{ "exit",   &builtin_exit },
 	};
 
-
 	if (!ast->token)
 		return 0;
 	for (unsigned long int i = 0; i < LEN(builtins); i++) {
