@@ -16,7 +16,7 @@
 #define REDIRECT(UNUSED, DST, SRC) \
 		(sclose(UNUSED), sdup2(SRC, DST), sclose(SRC))
 
-static int interpret(struct AST *ast);
+static void interpret(struct AST *ast);
 
 static void
 printBar(void)
@@ -52,17 +52,17 @@ static void
 execute(struct AST *ast)
 {
 	redirectFiles(ast->input, ast->output);
-	if (!builtin(ast)) {
-		execvp(ast->token[0], ast->token);
-		err(EXIT_FAILURE, "%s", ast->token[0]);
-	}
+	if (builtin(ast))
+		exit(EXIT_SUCCESS);
+	execvp(ast->token[0], ast->token);
+	err(EXIT_FAILURE, "%s", ast->token[0]);
 }
 
-static int
+static void
 interpretPipe(struct AST *ast)
 {
 	pid_t pid;
-	int fd[2], status;
+	int fd[2];
 
 	spipe(fd);
 	pid = fork();
@@ -74,13 +74,10 @@ interpretPipe(struct AST *ast)
 	} else { /* parent */
 		REDIRECT(fd[STDOUT_FILENO], STDIN_FILENO, fd[STDIN_FILENO]);
 		interpret(ast->r);
-		waitpid(pid, &status, 0);
-		status = WEXITSTATUS(status);
 	}
-	return status;
 }
 
-static int
+static void
 interpretJunction(struct AST *ast)
 {
 	int status, pid;
@@ -90,44 +87,47 @@ interpretJunction(struct AST *ast)
 		err(EXIT_FAILURE, "fork");
 	} else if (!pid) {
 		interpret(ast->l);
-		exit(EXIT_SUCCESS); /* performed builtin */
 	} else {
 		waitpid(pid, &status, 0);
-		status = !WEXITSTATUS(status);
+		if (WIFSIGNALED(status))
+			exit(WTERMSIG(status));
+		status = WEXITSTATUS(status);
 		switch (ast->type) {
 		case NODE_CONJ:
-			status = status && interpret(ast->r);
+			if (!status)
+				interpret(ast->r);
+			else
+				exit(EXIT_FAILURE);
 			break;
 		case NODE_DISJ:
-			status = status || interpret(ast->r);
+			if (status)
+				interpret(ast->r);
+			else
+				exit(EXIT_SUCCESS);
 			break;
 		default:
-			break;
+			errx(EXIT_FAILURE, "unreachable");
 		}
 	}
-	return status;
 }
 
-static int
+static void
 interpret(struct AST *ast)
 {
-	int ret;
-
 	if (!ast)
-		return EXIT_FAILURE;
+		return;
 	switch (ast->type) {
 	case NODE_CONJ: /* FALLTHROUGH */
 	case NODE_DISJ:
-		ret = interpretJunction(ast);
+		interpretJunction(ast);
 		break;
 	case NODE_PIPE:
-		ret = interpretPipe(ast);
+		interpretPipe(ast);
 		break;
 	case NODE_AMPR: /* FALLTHROUGH */
 	case NODE_COMMAND:
-		execute(ast); /* should not return */
+		execute(ast);
 	}
-	return ret;
 }
 
 static struct AST *
@@ -166,7 +166,7 @@ routine(void)
 		bg = 0;
 		ast = parse(&bg);
 		if (ast) {
-			pid = builtin(ast) ? -1 : fork();
+			pid = (!bg && builtin(ast)) ? -1 : fork();
 			if (!pid)
 				interpret(ast);
 			freeAST(ast);
