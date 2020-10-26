@@ -43,5 +43,6 @@ main(int argc, char *argv[])
 
 	file = init(argc, argv);
 	routine(file);
+	fclose(file);
 	return 0;
 }

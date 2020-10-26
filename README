@@ -47,7 +47,7 @@ Implemented POSIX shell operations
 6) Foreground and background (partially. See
   https://www.gnu.org/software/libc/manual/html_node/Implementing-a-Shell.html
   for more info).
-7) Comments
+7) Comments.
 8) Scripts execution.
 
 List of builtin commands

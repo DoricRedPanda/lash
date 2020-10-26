@@ -68,13 +68,12 @@ interpretPipe(struct AST *ast)
 	pid = fork();
 	if (pid < 0) {
 		err(EXIT_FAILURE, "fork");
-	} else if (!pid) { /* child */
+	} else if (!pid) {
 		REDIRECT(fd[STDIN_FILENO], STDOUT_FILENO, fd[STDOUT_FILENO]);
 		interpret(ast->l);
-	} else { /* parent */
-		REDIRECT(fd[STDOUT_FILENO], STDIN_FILENO, fd[STDIN_FILENO]);
-		interpret(ast->r);
 	}
+	REDIRECT(fd[STDOUT_FILENO], STDIN_FILENO, fd[STDIN_FILENO]);
+	interpret(ast->r);
 }
 
 static void
@@ -83,33 +82,24 @@ interpretJunction(struct AST *ast)
 	int status, pid;
 
 	pid = fork();
-	if (pid < 0) {
+	if (pid < 0)
 		err(EXIT_FAILURE, "fork");
-	} else if (!pid) {
+	else if (!pid)
 		interpret(ast->l);
-	} else {
-		waitpid(pid, &status, 0);
-		if (WIFSIGNALED(status))
-			exit(WTERMSIG(status));
-		status = WEXITSTATUS(status);
-		switch (ast->type) {
-		case NODE_CONJ:
-			if (!status)
-				interpret(ast->r);
-			else
-				exit(EXIT_FAILURE);
-			break;
-		case NODE_DISJ:
-			if (status)
-				interpret(ast->r);
-			else
-				exit(EXIT_SUCCESS);
-			break;
-		default:
-			errx(EXIT_FAILURE, "unreachable");
-		}
-	}
-	err(EXIT_FAILURE, "WRONG");
+	waitpid(pid, &status, 0);
+	if (WIFSIGNALED(status))
+		exit(WTERMSIG(status));
+	status = WEXITSTATUS(status);
+	if (ast->type == NODE_CONJ) {
+		if (!status)
+			interpret(ast->r);
+		else
+			exit(EXIT_FAILURE);
+	}  /* NODE_DISJ*/
+	if (status)
+		interpret(ast->r);
+	else
+		exit(EXIT_SUCCESS);
 }
 
 static void
@@ -128,7 +118,6 @@ interpret(struct AST *ast)
 	default:
 		execute(ast);
 	}
-	err(EXIT_FAILURE, "WRONG");
 }
 
 static struct AST *
@@ -191,6 +180,5 @@ routine(FILE *file)
 				; /* catch zombies */
 		}
 	}
-	fclose(file);
 }
 
