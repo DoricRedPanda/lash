@@ -1,4 +1,5 @@
 #include <err.h>
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -153,6 +154,16 @@ parse(FILE *file, int *bg)
 }
 
 void
+catchZombies(void)
+{
+	int olderrno = errno;
+
+	while (waitpid(-1, NULL, WNOHANG) > 0)
+		;
+	errno = olderrno;
+}
+
+void
 routine(FILE *file)
 {
 	struct AST *ast = NULL;
@@ -169,15 +180,16 @@ routine(FILE *file)
 			if (!pid) {
 				if (!p_interactive)
 					fclose(file);
-				if (bg)
-					setpgid(getpid(), getpid());
+				if (bg) {
+					pid = getpid();
+					setpgid(pid, pid);
+				}
 				interpret(ast);
 			}
 			freeAST(ast);
 			if (!bg)
 				waitpid(pid, NULL, 0);
-			while (waitpid(-1, NULL, WNOHANG) > 0)
-				; /* catch zombies */
+			catchZombies();
 		}
 	}
 }
