@@ -33,4 +33,4 @@ clean:
 uninstall:
 	$(RM) -f $(install_dir)/$(program_name)
 
-.PHONY: clean install uninstall
+.PHONY: all clean install uninstall
