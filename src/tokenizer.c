@@ -1,3 +1,4 @@
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -36,6 +37,11 @@ getWord(FILE *file, int *ending)
 		word[len - 1] = ch;
 		if (ch == EOF || strchr("\n \t><", ch)) {
 			*ending = ch;
+			if (errno != 0) {
+				*ending = '\n';
+				putchar('\n');
+				errno = 0;
+			}
 			if (len == 1) {
 				free(word);
 				return NULL;
@@ -63,8 +69,7 @@ parseRedirection(FILE *file, char **word, int *ending, char **input, char **outp
 	default:
 		return;
 	}
-	if (*ptr)
-		free(*ptr);
+	free(*ptr);
 	while (!(*ptr = getWord(file, ending)))
 		;
 }
@@ -102,12 +107,11 @@ readToken(FILE *file, char ***token, char **input, char **output)
 			t[len - 1] = word;
 		}
 	} while (ending != EOF && ending != '\n');
-	if (!len) {
-		if (ending == EOF)  /* empty line ended with EOF */
-			exit(EXIT_SUCCESS);
-	} else {
+	if (len) {
 		t = srealloc(t, (len + 1) * sizeof(char *));
 		t[len] = NULL;
+	} else if (ending == EOF) { /* empty line ended with EOF */
+		exit(EXIT_SUCCESS);
 	}
 	*token = t;
 	return type;
@@ -116,6 +120,8 @@ readToken(FILE *file, char ***token, char **input, char **output)
 void
 freeToken(char **token)
 {
+	if (!token)
+		return;
 	for (int i = 0; token[i]; i++)
 		free(token[i]);
 	free(token);

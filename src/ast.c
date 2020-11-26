@@ -24,16 +24,10 @@ freeAST(struct AST *ast)
 {
 	if (!ast)
 		return;
-	if (ast->type != NODE_COMMAND) {
-		freeAST(ast->l);
-		freeAST(ast->r);
-	} else {
-		if (ast->token)
-			freeToken(ast->token);
-		if (ast->input)
-			free(ast->input);
-		if (ast->output)
-			free(ast->output);
-	}
+	freeToken(ast->token);
+	free(ast->input);
+	free(ast->output);
+	freeAST(ast->l);
+	freeAST(ast->r);
 	free(ast);
 }

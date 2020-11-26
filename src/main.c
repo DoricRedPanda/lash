@@ -9,9 +9,25 @@
 int p_interactive;
 
 void
-sigint_handler(int signum)
+handler(int signum)
 {
 	return;
+}
+
+void
+install_handler(void)
+{
+	struct sigaction setup_action;
+	sigset_t block_mask;
+
+	sigemptyset(&block_mask);
+	sigaddset(&block_mask, SIGINT);
+	sigaddset(&block_mask, SIGTSTP);
+	setup_action.sa_handler = handler;
+	setup_action.sa_mask = block_mask;
+	setup_action.sa_flags = 0;
+	sigaction(SIGINT, &setup_action, NULL);
+	sigaction(SIGTSTP, &setup_action, NULL);
 }
 
 FILE *
@@ -32,7 +48,7 @@ init(int argc, char *argv[])
 			err(1, "wrong usage");
 	}
 	if (p_interactive)
-		signal(SIGINT, sigint_handler);
+		install_handler();
 	return file;
 }
 
