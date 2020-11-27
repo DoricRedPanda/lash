@@ -24,7 +24,7 @@ builtin(struct AST *ast)
 
 	if (!ast->token)
 		return 0;
-	for (unsigned long int i = 0; i < LEN(builtins); i++) {
+	for (unsigned long i = 0; i < LEN(builtins); i++) {
 		if (!strcmp(builtins[i].name, ast->token[0])) {
 			(*builtins[i].func)(ast->token);
 			return 1;

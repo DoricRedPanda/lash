@@ -38,7 +38,8 @@ init(int argc, char *argv[])
 	if (argc > 2)
 		errx(EXIT_FAILURE, "too many arguments");
 	else if (argc == 2) {
-		if ((file = fopen(argv[1], "r")) == NULL)
+		file = fopen(argv[1], "r");
+		if (file == NULL)
 			err(EXIT_FAILURE, "fopen");
 		p_interactive = 0;
 	} else if (argc == 1) {
