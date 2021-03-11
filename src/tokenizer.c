@@ -55,7 +55,7 @@ getWord(FILE *file, int *ending)
 
 /* TODO: handle [n]redirect_op word, handle errors */
 static void
-parseRedirection(FILE *file, char **word, int *ending, char **input, char **output)
+parseRedirection(FILE *file, int *ending, char **input, char **output)
 {
 	char **ptr = NULL;
 
@@ -75,7 +75,7 @@ parseRedirection(FILE *file, char **word, int *ending, char **input, char **outp
 }
 
 static NodeType
-checkOper(char *word)
+checkOper(const char word[])
 {
 	NodeType type = NODE_COMMAND;
 
@@ -96,7 +96,7 @@ readToken(FILE *file, char ***token, char **input, char **output)
 
 	do {
 		word = getWord(file, &ending);
-		parseRedirection(file, &word, &ending, input, output);
+		parseRedirection(file, &ending, input, output);
 		if (word) {
 			type = checkOper(word);
 			if (type != NODE_COMMAND) {

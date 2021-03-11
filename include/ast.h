@@ -15,6 +15,6 @@ struct AST {
 	NodeType type;
 };
 
-struct AST *getASTNode(char **, char *, char *, NodeType);
+struct AST *getASTNode(char *token[], char input[], char output[], NodeType);
 
 void freeAST(struct AST *ast);

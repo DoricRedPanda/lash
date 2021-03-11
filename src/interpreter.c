@@ -15,9 +15,9 @@
 #include "builtin.h"
 
 #define REDIRECT(UNUSED, DST, SRC) \
-		(sclose(UNUSED), sdup2(SRC, DST), sclose(SRC))
+		(sclose((UNUSED)), sdup2((SRC), (DST)), sclose((SRC)))
 
-static void interpret(struct AST *ast);
+static void interpret(const struct AST *ast);
 
 static void
 printBar(void)
@@ -29,7 +29,7 @@ printBar(void)
 }
 
 static void
-openReplace(char *file, int dstfd)
+openReplace(const char file[], int dstfd)
 {
 	int srcfd;
 
@@ -41,7 +41,7 @@ openReplace(char *file, int dstfd)
 }
 
 static void
-redirectFiles(char *input, char *output)
+redirectFiles(const char input[], const char output[])
 {
 	if (input)
 		openReplace(input, STDIN_FILENO);
@@ -50,17 +50,17 @@ redirectFiles(char *input, char *output)
 }
 
 static void
-execute(struct AST *ast)
+execute(const struct AST *ast)
 {
 	redirectFiles(ast->input, ast->output);
-	if (builtin(ast))
+	if (builtin(ast->token))
 		exit(EXIT_SUCCESS);
 	execvp(ast->token[0], ast->token);
 	err(EXIT_FAILURE, "%s", ast->token[0]);
 }
 
 static void
-interpretPipe(struct AST *ast)
+interpretPipe(const struct AST *ast)
 {
 	pid_t pid;
 	int fd[2];
@@ -78,7 +78,7 @@ interpretPipe(struct AST *ast)
 }
 
 static void
-interpretJunction(struct AST *ast)
+interpretJunction(const struct AST *ast)
 {
 	int status, pid;
 
@@ -104,7 +104,7 @@ interpretJunction(struct AST *ast)
 }
 
 static void
-interpret(struct AST *ast)
+interpret(const struct AST *ast)
 {
 	if (!ast)
 		errx(EXIT_FAILURE, "Syntax error");
@@ -176,7 +176,7 @@ routine(FILE *file)
 		bg = 0;
 		ast = parse(file, &bg);
 		if (ast) {
-			pid = (!bg && builtin(ast)) ? -1 : fork();
+			pid = (!bg && builtin(ast->token)) ? -1 : fork();
 			if (!pid) {
 				if (!p_interactive)
 					fclose(file);

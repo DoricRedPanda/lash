@@ -8,25 +8,24 @@
 #include <stdlib.h>
 
 #include "util.h"
-#include "ast.h"
 #include "builtin.h"
 
 static char cwd[PATH_MAX + 1];
 static char owd[PATH_MAX + 1];
 
 int
-builtin(struct AST *ast)
+builtin(char *argv[])
 {
 	static Builtin builtins[] = {
 		{ "cd",     &builtin_cd },
 		{ "exit",   &builtin_exit },
 	};
 
-	if (!ast->token)
+	if (!argv)
 		return 0;
 	for (unsigned long i = 0; i < LEN(builtins); i++) {
-		if (!strcmp(builtins[i].name, ast->token[0])) {
-			(*builtins[i].func)(ast->token);
+		if (!strcmp(builtins[i].name, argv[0])) {
+			(*builtins[i].func)(argv);
 			return 1;
 		}
 	}
@@ -34,7 +33,7 @@ builtin(struct AST *ast)
 }
 
 void
-builtin_cd(char **argv)
+builtin_cd(char *argv[])
 {
 	char *dir = argv[1];
 	int isowd = 0;
@@ -42,11 +41,11 @@ builtin_cd(char **argv)
 	if (!dir) {
 		dir = getenv("HOME");
 		if (!dir)
-			warn("%s", argv[0]);
+			warn("getenv HOME %s", argv[0]);
 	} else if (strcmp(dir, "-") == 0) {
 		dir = getenv("OWD");
 		if (!dir)
-			warn("%s", argv[0]);
+			warn("getenv OWD %s", argv[0]);
 		isowd = 1;
 	}
 	getcwd(owd, PATH_MAX);
@@ -62,7 +61,7 @@ builtin_cd(char **argv)
 }
 
 void
-builtin_exit(char **argv)
+builtin_exit(char *argv[])
 {
 	if (!argv[1])
 		exit(EXIT_SUCCESS);

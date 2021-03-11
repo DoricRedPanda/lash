@@ -1,9 +1,9 @@
 typedef struct {
 	char *name;
-	void (*func)(char **);
+	void (*func)(char *argv[]);
 } Builtin;
 
-int builtin(struct AST *ast);
+int builtin(char *argv[]);
 
-void builtin_cd(char **argv);
-void builtin_exit(char **argv);
+void builtin_cd(char *argv[]);
+void builtin_exit(char *argv[]);

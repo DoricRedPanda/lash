@@ -41,7 +41,7 @@ srealloc(void *ptr, size_t size)
 }
 
 int
-sopen(char *fileName, int flag)
+sopen(const char fileName[], int flag)
 {
 	int fd = -1;
 

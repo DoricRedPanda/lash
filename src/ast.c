@@ -6,7 +6,7 @@
 #include "util.h"
 
 struct AST *
-getASTNode(char **token, char *input, char *output, NodeType type)
+getASTNode(char *token[], char input[], char output[], NodeType type)
 {
 	struct AST *ast = smalloc(sizeof(struct AST));
 
